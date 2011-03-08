@@ -1,12 +1,12 @@
 package SQL::Translator::Shim::Producer::SQLite;
 
 use Moo;
-use SQL::Translator::Shim;
+use SQL::Translator::ProducerUtils;
 
 use SQL::Translator::Shim::Producer;
 with 'SQL::Translator::Shim::Producer';
 
-sub _build_shim { SQL::Translator::Shim->new( quote_chars => ['', ''] ) }
+sub _build_shim { SQL::Translator::ProducerUtils->new( quote_chars => ['', ''] ) }
 
 sub _build_type_map {
    +{
@@ -33,13 +33,26 @@ sub _build_unquoted_defaults {
 
 sub nullable { () }
 
+sub _ipk {
+   my ($self, $field) = @_;
+
+   my $pk = $field->table->primary_key;
+   my @pk_fields = $pk ? $pk->fields : ();
+
+   $field->is_primary_key && scalar @pk_fields == 1 &&
+   ( $field->data_type =~ /int(eger)?$/i
+    ||
+   ( $field->data_type =~ /^number?$/i && $field->size !~ /,/ ) )
+}
+
 sub field {
    my ($self, $field) = @_;
+
 
    return join ' ',
       $self->field_comments($field),
       $self->field_name($field),
-      ( $field->is_auto_increment
+      ( $self->_ipk($field)
          ? ( 'INTEGER PRIMARY KEY' )
          : ( $self->field_type($field) )
       ),
@@ -55,8 +68,6 @@ sub field_type_size {
       : ''
    )
 }
-
-sub field_autoinc { ( $_[1]->is_auto_increment ? 'IDENTITY' : () ) }
 
 1;
 
