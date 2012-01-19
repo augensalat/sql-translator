@@ -56,7 +56,7 @@ use SQL::Translator::Producer::SQLite;
         on_update => 'CASCADE',
     );
 
-    my $expected = [ "FOREIGN KEY('foreign_key') REFERENCES 'foo'('id') ON DELETE RESTRICT ON UPDATE CASCADE"];
+    my $expected = [ "FOREIGN KEY ('foreign_key') REFERENCES 'foo'('id') ON DELETE RESTRICT ON UPDATE CASCADE"];
     my $result =  [SQL::Translator::Producer::SQLite::create_foreignkey($constraint,$create_opts)];
     is_deeply($result, $expected, 'correct "FOREIGN KEY"');
 }
